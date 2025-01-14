@@ -15,6 +15,7 @@ import {
 } from "./types";
 import { keymapPlugin } from "./plugins/keymap-plugin";
 import { Node } from "prosemirror-model";
+import { generateJoke } from "../../services/ai-service";
 
 const getTypeColor = (type: SuggestionType) => {
   switch (type) {
@@ -75,6 +76,17 @@ export default function Editor({ defaultContent = "" }: EditorProps) {
         const newState = view.state.apply(transaction);
         view.updateState(newState);
 
+        // Handle AI commands
+        const aiCommand = transaction.getMeta("aiCommand");
+        if (aiCommand) {
+          const { suggestion, position } = aiCommand;
+          console.log("AI command received:", suggestion); // Debug log
+
+          if (suggestion.label === "joke") {
+            handleJoke(view, position);
+          }
+        }
+
         const pluginState = autocompleteKey.getState(newState);
         setAutocompleteState(pluginState);
       },
@@ -110,8 +122,10 @@ export default function Editor({ defaultContent = "" }: EditorProps) {
 
   const popupPosition = getPopupPosition();
 
-  const handleSuggestionSelect = (suggestion: Suggestion) => {
+  const handleSuggestionSelect = async (suggestion: Suggestion) => {
     if (!viewRef.current) return;
+
+    console.log("Suggestion selected:", suggestion); // Debug log
 
     const view = viewRef.current;
     const state = autocompleteKey.getState(view.state);
@@ -123,7 +137,43 @@ export default function Editor({ defaultContent = "" }: EditorProps) {
       // Delete the trigger and query
       tr.delete(insertPos, state.position + state.query.length);
 
-      // Choose prefix based on type
+      // Handle AI commands
+      if (suggestion.type === "ai") {
+        console.log("AI command detected"); // Debug log
+
+        if (suggestion.label === "joke") {
+          console.log("Joke command detected"); // Debug log
+
+          // Insert loading placeholder
+          const loadingText = "🤔 Thinking of a joke...";
+          tr.insertText(loadingText, insertPos);
+          view.dispatch(tr);
+          console.log("Loading text inserted"); // Debug log
+
+          try {
+            // Get the joke
+            const joke = await generateJoke();
+            console.log("Joke received:", joke); // Debug log
+
+            // Replace loading text with joke
+            const newTr = view.state.tr;
+            newTr.delete(insertPos, insertPos + loadingText.length);
+            newTr.insertText(`😄 ${joke}`, insertPos);
+            newTr.insertText("\n", insertPos + joke.length + 3);
+            view.dispatch(newTr);
+            console.log("Joke inserted into editor"); // Debug log
+          } catch (error: unknown) {
+            console.error("Error generating joke:", error);
+            const newTr = view.state.tr;
+            newTr.delete(insertPos, insertPos + loadingText.length);
+            newTr.insertText("❌ Failed to generate joke", insertPos);
+            view.dispatch(newTr);
+          }
+          return;
+        }
+      }
+
+      // Handle regular mentions (existing code)
       const prefix =
         suggestion.type === "person"
           ? "@"
@@ -131,10 +181,8 @@ export default function Editor({ defaultContent = "" }: EditorProps) {
           ? "#"
           : "✨";
 
-      // Insert the mention text with the appropriate prefix
       const mentionText = `${prefix}${suggestion.label}`;
 
-      // Add text with a custom mark for styling
       const mark = schema.marks.mention.create({
         class: `${getTypeColor(
           suggestion.type
@@ -142,13 +190,10 @@ export default function Editor({ defaultContent = "" }: EditorProps) {
         type: suggestion.type,
         description: suggestion.description,
       });
+
       tr.insertText(mentionText, insertPos);
       tr.addMark(insertPos, insertPos + mentionText.length, mark);
-
-      // Add a space after the mention
       tr.insertText(" ", insertPos + mentionText.length);
-
-      // Set selection after the space
       tr.setSelection(
         TextSelection.create(tr.doc, insertPos + mentionText.length + 1)
       );
@@ -162,6 +207,33 @@ export default function Editor({ defaultContent = "" }: EditorProps) {
 
       view.dispatch(tr);
       view.focus();
+    }
+  };
+
+  const handleJoke = async (view: EditorView, position: number) => {
+    console.log("Handling joke command"); // Debug log
+
+    // Insert loading placeholder
+    const loadingText = "🤔 Thinking of a joke...";
+    const tr = view.state.tr;
+    tr.insertText(loadingText, position);
+    view.dispatch(tr);
+
+    try {
+      const joke = await generateJoke();
+      console.log("Joke received:", joke); // Debug log
+
+      const newTr = view.state.tr;
+      newTr.delete(position, position + loadingText.length);
+      newTr.insertText(`😄 ${joke}`, position);
+      newTr.insertText("\n", position + joke.length + 3);
+      view.dispatch(newTr);
+    } catch (error) {
+      console.error("Error generating joke:", error);
+      const newTr = view.state.tr;
+      newTr.delete(position, position + loadingText.length);
+      newTr.insertText("❌ Failed to generate joke", position);
+      view.dispatch(newTr);
     }
   };
 

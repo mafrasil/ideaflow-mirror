@@ -38,6 +38,13 @@ const insertMention = (
   // Delete the trigger and query
   tr.delete(insertPos, state.position + state.query.length);
 
+  // For AI commands, let the editor handle it
+  if (suggestion.type === "ai") {
+    tr.setMeta("aiCommand", { suggestion, position: insertPos });
+    view.dispatch(tr);
+    return;
+  }
+
   // Choose prefix based on type
   const prefix =
     suggestion.type === "person" ? "@" : suggestion.type === "tag" ? "#" : "✨";
@@ -222,11 +229,17 @@ export const autocompletePlugin = new Plugin({
         return false;
       }
 
+      // Get filtered suggestions
+      const filteredSuggestions = SUGGESTIONS.filter((suggestion) =>
+        suggestion.label.toLowerCase().startsWith(state.query.toLowerCase())
+      );
+
       switch (event.key) {
         case "ArrowUp": {
           event.preventDefault();
           const prevIndex =
-            (state.selectedIndex - 1 + SUGGESTIONS.length) % SUGGESTIONS.length;
+            (state.selectedIndex - 1 + filteredSuggestions.length) %
+            filteredSuggestions.length;
           view.dispatch(
             view.state.tr.setMeta(autocompleteKey, {
               ...state,
@@ -238,7 +251,8 @@ export const autocompletePlugin = new Plugin({
 
         case "ArrowDown": {
           event.preventDefault();
-          const nextIndex = (state.selectedIndex + 1) % SUGGESTIONS.length;
+          const nextIndex =
+            (state.selectedIndex + 1) % filteredSuggestions.length;
           view.dispatch(
             view.state.tr.setMeta(autocompleteKey, {
               ...state,
@@ -249,19 +263,14 @@ export const autocompletePlugin = new Plugin({
         }
 
         case "Enter":
+        case "Tab":
           if (state.active && state.position !== null) {
             event.preventDefault();
-            const suggestion = SUGGESTIONS[state.selectedIndex];
-            insertMention(view, state, suggestion);
-            return true;
-          }
-          return false;
-
-        case "Tab":
-          if (state.position !== null) {
-            event.preventDefault();
-            const suggestion = SUGGESTIONS[state.selectedIndex];
-            insertMention(view, state, suggestion);
+            // Use the filtered suggestions instead of all suggestions
+            const suggestion = filteredSuggestions[state.selectedIndex];
+            if (suggestion) {
+              insertMention(view, state, suggestion);
+            }
             return true;
           }
           return false;

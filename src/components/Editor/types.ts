@@ -69,20 +69,26 @@ export const SUGGESTIONS: Suggestion[] = [
   // AI-powered actions
   {
     id: "7",
+    label: "joke",
+    type: "ai",
+    description: "AI: Tell me a joke",
+  },
+  {
+    id: "8",
     label: "summarize",
     type: "ai",
     description: "AI: Summarize the selected text",
     icon: "✨",
   },
   {
-    id: "8",
+    id: "9",
     label: "translate",
     type: "ai",
     description: "AI: Translate the selected text",
     icon: "🌐",
   },
   {
-    id: "9",
+    id: "10",
     label: "improve",
     type: "ai",
     description: "AI: Improve writing style",
