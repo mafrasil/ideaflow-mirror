@@ -1,18 +1,39 @@
 import { Plugin, PluginKey, TextSelection } from "prosemirror-state";
 import { schema } from "../schema";
-import { AutocompleteState, SUGGESTIONS } from "../types";
+import {
+  AutocompleteState,
+  Suggestion,
+  SUGGESTIONS,
+  SuggestionType,
+} from "../types";
 import { EditorView } from "prosemirror-view";
 
 export const autocompleteKey = new PluginKey("autocomplete");
 
+const getTypeColor = (type: SuggestionType) => {
+  switch (type) {
+    case "person":
+      return "bg-blue-100 text-blue-700";
+    case "ai":
+      return "bg-purple-100 text-purple-700";
+    case "tag":
+      return "bg-green-100 text-green-700";
+    default:
+      return "bg-gray-200 text-gray-700";
+  }
+};
+
 const insertMention = (
   view: EditorView,
   state: AutocompleteState,
-  suggestion: { label: string }
+  suggestion: Suggestion
 ) => {
   const { tr } = view.state;
   if (state.position === null) return;
   const insertPos = state.position - 2;
+
+  // Ensure we're within valid bounds
+  if (insertPos < 0 || insertPos > tr.doc.content.size) return;
 
   // Delete the trigger and query
   tr.delete(insertPos, state.position + state.query.length);
@@ -22,8 +43,14 @@ const insertMention = (
 
   // Add text with a custom mark for styling
   const mark = schema.marks.mention.create({
-    class: "bg-gray-200 px-1.5 py-0.5 rounded text-gray-700 font-medium",
+    class: `${getTypeColor(
+      suggestion.type
+    )} px-1.5 py-0.5 rounded font-medium transition-colors`,
+    type: suggestion.type,
+    description: suggestion.description,
   });
+
+  // Insert text and mark
   tr.insertText(mentionText, insertPos);
   tr.addMark(insertPos, insertPos + mentionText.length, mark);
 
@@ -31,9 +58,10 @@ const insertMention = (
   tr.insertText(" ", insertPos + mentionText.length);
 
   // Set selection after the space
-  tr.setSelection(
-    TextSelection.create(tr.doc, insertPos + mentionText.length + 1)
-  );
+  const newPos = insertPos + mentionText.length + 1;
+  if (newPos <= tr.doc.content.size) {
+    tr.setSelection(TextSelection.create(tr.doc, newPos));
+  }
 
   tr.setMeta(autocompleteKey, {
     active: false,

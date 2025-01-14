@@ -7,8 +7,26 @@ import {
   autocompletePlugin,
 } from "../editor/autocomplete/autocomplete-plugin";
 import { schema } from "./schema";
-import { AutocompleteState, SUGGESTIONS, Suggestion } from "./types";
+import {
+  AutocompleteState,
+  SUGGESTIONS,
+  Suggestion,
+  SuggestionType,
+} from "./types";
 import { keymapPlugin } from "./plugins/keymap-plugin";
+
+const getTypeColor = (type: SuggestionType) => {
+  switch (type) {
+    case "person":
+      return "bg-blue-100 text-blue-700";
+    case "ai":
+      return "bg-purple-100 text-purple-700";
+    case "tag":
+      return "bg-green-100 text-green-700";
+    default:
+      return "bg-gray-200 text-gray-700";
+  }
+};
 
 export default function Editor() {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -89,7 +107,11 @@ export default function Editor() {
 
       // Add text with a custom mark for styling
       const mark = schema.marks.mention.create({
-        class: "bg-gray-200 px-1.5 py-0.5 rounded text-gray-700 font-medium",
+        class: `${getTypeColor(
+          suggestion.type
+        )} px-1.5 py-0.5 rounded font-medium transition-colors`,
+        type: suggestion.type,
+        description: suggestion.description,
       });
       tr.insertText(mentionText, insertPos);
       tr.addMark(insertPos, insertPos + mentionText.length, mark);
@@ -118,7 +140,7 @@ export default function Editor() {
     <div className="relative prose max-w-none">
       <div
         ref={editorRef}
-        className="min-h-[200px] border rounded-md outline-none focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500"
+        className="min-h-[200px] border rounded-md outline-none focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 shadow-sm"
       />
       {autocompleteState.active &&
         popupPosition &&

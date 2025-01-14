@@ -51,6 +51,8 @@ export const schema = new Schema({
     mention: {
       attrs: {
         class: { default: "" },
+        type: { default: "person" },
+        description: { default: null },
       },
       inclusive: false,
       spanning: false,
@@ -60,18 +62,30 @@ export const schema = new Schema({
           tag: "span.mention",
           getAttrs: (dom) => ({
             class: (dom as HTMLElement).getAttribute("class"),
+            type: (dom as HTMLElement).getAttribute("data-type"),
+            description: (dom as HTMLElement).getAttribute("data-description"),
           }),
         },
       ],
-      toDOM: (mark) => [
-        "span",
-        {
-          class: mark.attrs.class,
-          contenteditable: "false",
-          "data-mention": "true",
-        },
-        0,
-      ],
+      toDOM: (mark) =>
+        [
+          "span",
+          {
+            class: `${mark.attrs.class} group relative cursor-help`,
+            "data-type": mark.attrs.type,
+            "data-description": mark.attrs.description,
+            contenteditable: "false",
+          },
+          [
+            "span",
+            {
+              class:
+                "pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 -translate-y-0.5 rounded bg-gray-900 px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100",
+            },
+            mark.attrs.description,
+          ],
+          ["span", {}, 0],
+        ] as const,
     },
   },
 });
