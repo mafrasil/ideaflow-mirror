@@ -21,7 +21,6 @@ export type Suggestion = {
   icon?: string;
 };
 
-// Enhanced suggestions with different types and descriptions
 export const SUGGESTIONS: Suggestion[] = [
   // People mentions
   {

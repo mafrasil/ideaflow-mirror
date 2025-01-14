@@ -80,8 +80,6 @@ export default function Editor({ defaultContent = "" }: EditorProps) {
         const aiCommand = transaction.getMeta("aiCommand");
         if (aiCommand) {
           const { suggestion, position } = aiCommand;
-          console.log("AI command received:", suggestion); // Debug log
-
           if (suggestion.label === "joke") {
             handleJoke(view, position);
           }
@@ -125,8 +123,6 @@ export default function Editor({ defaultContent = "" }: EditorProps) {
   const handleSuggestionSelect = async (suggestion: Suggestion) => {
     if (!viewRef.current) return;
 
-    console.log("Suggestion selected:", suggestion); // Debug log
-
     const view = viewRef.current;
     const state = autocompleteKey.getState(view.state);
 
@@ -139,28 +135,21 @@ export default function Editor({ defaultContent = "" }: EditorProps) {
 
       // Handle AI commands
       if (suggestion.type === "ai") {
-        console.log("AI command detected"); // Debug log
-
         if (suggestion.label === "joke") {
-          console.log("Joke command detected"); // Debug log
-
           // Insert loading placeholder
           const loadingText = "🤔 Thinking of a joke...";
           tr.insertText(loadingText, insertPos);
           view.dispatch(tr);
-          console.log("Loading text inserted"); // Debug log
 
           try {
             // Get the joke
             const joke = await generateJoke();
-            console.log("Joke received:", joke); // Debug log
 
             // Replace loading text with joke
             const newTr = view.state.tr;
             newTr.delete(insertPos, insertPos + loadingText.length);
             newTr.insertText(`😄 ${joke}`, insertPos);
             view.dispatch(newTr);
-            console.log("Joke inserted into editor"); // Debug log
           } catch (error: unknown) {
             console.error("Error generating joke:", error);
             const newTr = view.state.tr;
@@ -172,7 +161,6 @@ export default function Editor({ defaultContent = "" }: EditorProps) {
         }
       }
 
-      // Handle regular mentions (existing code)
       const prefix =
         suggestion.type === "person"
           ? "@"
@@ -210,8 +198,6 @@ export default function Editor({ defaultContent = "" }: EditorProps) {
   };
 
   const handleJoke = async (view: EditorView, position: number) => {
-    console.log("Handling joke command"); // Debug log
-
     // Insert loading placeholder
     const loadingText = "🤔 Thinking of a joke...";
     const tr = view.state.tr;
@@ -220,7 +206,6 @@ export default function Editor({ defaultContent = "" }: EditorProps) {
 
     try {
       const joke = await generateJoke();
-      console.log("Joke received:", joke); // Debug log
 
       const newTr = view.state.tr;
       newTr.delete(position, position + loadingText.length);
@@ -239,7 +224,7 @@ export default function Editor({ defaultContent = "" }: EditorProps) {
     <div className="relative prose max-w-none h-full">
       <div
         ref={editorRef}
-        className="h-full p-4 border rounded-md outline-none focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 shadow-sm"
+        className="h-full p-4 rounded-md outline-none editor-focus shadow-sm"
       />
       {autocompleteState.active &&
         popupPosition &&

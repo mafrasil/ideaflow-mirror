@@ -165,7 +165,7 @@ export const autocompletePlugin = new Plugin({
               return true;
             }
 
-            // Also check if we're right after a space that follows a mention
+            // Check if we're right after a space that follows a mention
             const twoCharsBefore = view.state.doc.resolve($from.pos - 2);
             const mentionTwoCharsBefore = twoCharsBefore
               .marks()
