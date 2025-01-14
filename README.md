@@ -4,6 +4,8 @@ A powerful text editor built with ProseMirror, React, and TypeScript that featur
 
 Built as part of the Ideaflow technical assessment. Implementation inspired by modern text editors while maintaining a focus on clean code and user experience.
 
+🔗 **Live Preview:** [https://ideaflow-mirror.vercel.app/](https://ideaflow-mirror.vercel.app/)
+
 ## Features
 
 - **Smart Autocomplete**
