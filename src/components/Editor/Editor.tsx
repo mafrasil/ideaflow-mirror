@@ -159,7 +159,6 @@ export default function Editor({ defaultContent = "" }: EditorProps) {
             const newTr = view.state.tr;
             newTr.delete(insertPos, insertPos + loadingText.length);
             newTr.insertText(`😄 ${joke}`, insertPos);
-            newTr.insertText("\n", insertPos + joke.length + 3);
             view.dispatch(newTr);
             console.log("Joke inserted into editor"); // Debug log
           } catch (error: unknown) {
@@ -226,9 +225,8 @@ export default function Editor({ defaultContent = "" }: EditorProps) {
       const newTr = view.state.tr;
       newTr.delete(position, position + loadingText.length);
       newTr.insertText(`😄 ${joke}`, position);
-      newTr.insertText("\n", position + joke.length + 3);
       view.dispatch(newTr);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Error generating joke:", error);
       const newTr = view.state.tr;
       newTr.delete(position, position + loadingText.length);

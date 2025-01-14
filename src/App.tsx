@@ -56,6 +56,22 @@ function App() {
             />
           </div>
         </div>
+
+        <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200 shadow-sm">
+          <p className="text-purple-700 text-sm flex items-center gap-2">
+            <span className="text-lg">✨</span>
+            <span>
+              Try typing{" "}
+              <kbd className="px-1.5 py-0.5 bg-white rounded text-xs border shadow-sm">
+                {"<>joke"}
+              </kbd>{" "}
+              to get an AI-generated joke!
+              <span className="text-purple-500 text-xs ml-2">
+                (Simulated API but works!)
+              </span>
+            </span>
+          </p>
+        </div>
       </div>
     </div>
   );
