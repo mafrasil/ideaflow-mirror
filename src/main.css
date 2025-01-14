@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.ProseMirror {
+  position: relative;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  -webkit-font-variant-ligatures: none;
+  font-variant-ligatures: none;
+  padding: 4px 8px 4px 14px;
+  line-height: 1.2;
+  outline: none;
+  border: 1px solid #e2e8f0;
+}
+
+.ProseMirror p {
+  margin: 0;
+}

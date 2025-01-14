@@ -13,6 +13,10 @@
     "@types/prosemirror-model": "^1.17.0",
     "@types/prosemirror-state": "^1.4.0",
     "@types/prosemirror-view": "^1.24.0",
+    "clsx": "^2.1.1",
+    "prosemirror-commands": "^1.6.2",
+    "prosemirror-history": "^1.4.1",
+    "prosemirror-keymap": "^1.2.2",
     "prosemirror-model": "^1.24.1",
     "prosemirror-state": "^1.4.3",
     "prosemirror-view": "^1.37.1",
@@ -21,6 +25,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@tailwindcss/typography": "^0.5.16",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react-swc": "^3.5.0",
