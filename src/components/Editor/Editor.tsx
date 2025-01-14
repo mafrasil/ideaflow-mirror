@@ -14,6 +14,7 @@ import {
   SuggestionType,
 } from "./types";
 import { keymapPlugin } from "./plugins/keymap-plugin";
+import { Node } from "prosemirror-model";
 
 const getTypeColor = (type: SuggestionType) => {
   switch (type) {
@@ -28,7 +29,11 @@ const getTypeColor = (type: SuggestionType) => {
   }
 };
 
-export default function Editor() {
+interface EditorProps {
+  defaultContent?: string;
+}
+
+export default function Editor({ defaultContent = "" }: EditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const [autocompleteState, setAutocompleteState] = useState<AutocompleteState>(
@@ -43,9 +48,25 @@ export default function Editor() {
   useEffect(() => {
     if (!editorRef.current) return;
 
+    // Split content by newlines and create paragraph nodes
+    const paragraphs = defaultContent
+      .split(/\n\n+/) // Split on multiple newlines for paragraph breaks
+      .map((paragraph) => {
+        // Handle single line breaks within paragraphs
+        const lines = paragraph.split(/\n/);
+        const nodes = lines.reduce((acc: Node[], line, i) => {
+          if (i > 0) acc.push(schema.node("hard_break")); // Add hard break between lines
+          if (line) acc.push(schema.text(line));
+          return acc;
+        }, []);
+
+        return schema.node("paragraph", null, nodes);
+      });
+
     const state = EditorState.create({
       schema,
       plugins: [autocompletePlugin, keymapPlugin],
+      doc: schema.node("doc", null, paragraphs),
     });
 
     const view = new EditorView(editorRef.current, {
@@ -59,13 +80,13 @@ export default function Editor() {
       },
     });
 
-    view.dom.classList.add("ProseMirror");
+    view.dom.classList.add("ProseMirror", "h-full", "w-full");
     viewRef.current = view;
 
     return () => {
       view.destroy();
     };
-  }, []);
+  }, [defaultContent]);
 
   const getPopupPosition = () => {
     if (!viewRef.current || autocompleteState.position === null) return null;
@@ -77,7 +98,7 @@ export default function Editor() {
 
     return {
       left: coords.left - domRect.left,
-      top: coords.bottom - domRect.top + 10,
+      top: coords.bottom - domRect.top + 20,
     };
   };
 
@@ -102,8 +123,16 @@ export default function Editor() {
       // Delete the trigger and query
       tr.delete(insertPos, state.position + state.query.length);
 
-      // Insert the mention text
-      const mentionText = `@${suggestion.label}`;
+      // Choose prefix based on type
+      const prefix =
+        suggestion.type === "person"
+          ? "@"
+          : suggestion.type === "tag"
+          ? "#"
+          : "✨";
+
+      // Insert the mention text with the appropriate prefix
+      const mentionText = `${prefix}${suggestion.label}`;
 
       // Add text with a custom mark for styling
       const mark = schema.marks.mention.create({
@@ -137,10 +166,10 @@ export default function Editor() {
   };
 
   return (
-    <div className="relative prose max-w-none">
+    <div className="relative prose max-w-none h-full">
       <div
         ref={editorRef}
-        className="min-h-[200px] border rounded-md outline-none focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 shadow-sm"
+        className="h-full p-4 border rounded-md outline-none focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 shadow-sm"
       />
       {autocompleteState.active &&
         popupPosition &&

@@ -23,36 +23,69 @@ export type Suggestion = {
 
 // Enhanced suggestions with different types and descriptions
 export const SUGGESTIONS: Suggestion[] = [
+  // People mentions
   {
     id: "1",
-    label: "mention",
+    label: "sarah",
     type: "person",
-    description: "Mention a team member",
+    description: "Sarah Chen - Product Manager",
   },
   {
     id: "2",
-    label: "meeting",
-    type: "tag",
-    description: "Tag as meeting notes",
+    label: "alex",
+    type: "person",
+    description: "Alex Rodriguez - Engineering Lead",
   },
   {
     id: "3",
+    label: "mike",
+    type: "person",
+    description: "Mike O'Brien - Designer",
+  },
+
+  // Tags for document organization
+  {
+    id: "4",
+    label: "meeting",
+    type: "tag",
+    description: "Tag as meeting notes",
+    icon: "📝",
+  },
+  {
+    id: "5",
+    label: "decision",
+    type: "tag",
+    description: "Document a key decision",
+    icon: "✅",
+  },
+  {
+    id: "6",
+    label: "todo",
+    type: "tag",
+    description: "Create a new task",
+    icon: "📋",
+  },
+
+  // AI-powered actions
+  {
+    id: "7",
     label: "summarize",
     type: "ai",
     description: "AI: Summarize the selected text",
     icon: "✨",
   },
   {
-    id: "4",
-    label: "task",
-    type: "tag",
-    description: "Create a new task",
+    id: "8",
+    label: "translate",
+    type: "ai",
+    description: "AI: Translate the selected text",
+    icon: "🌐",
   },
   {
-    id: "5",
-    label: "assistant",
+    id: "9",
+    label: "improve",
     type: "ai",
-    description: "AI: Ask for assistance",
-    icon: "🤖",
+    description: "AI: Improve writing style",
+    icon: "✍️",
   },
 ];

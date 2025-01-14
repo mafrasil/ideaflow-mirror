@@ -38,8 +38,12 @@ const insertMention = (
   // Delete the trigger and query
   tr.delete(insertPos, state.position + state.query.length);
 
-  // Insert the mention text
-  const mentionText = `@${suggestion.label}`;
+  // Choose prefix based on type
+  const prefix =
+    suggestion.type === "person" ? "@" : suggestion.type === "tag" ? "#" : "✨";
+
+  // Insert the mention text with the appropriate prefix
+  const mentionText = `${prefix}${suggestion.label}`;
 
   // Add text with a custom mark for styling
   const mark = schema.marks.mention.create({

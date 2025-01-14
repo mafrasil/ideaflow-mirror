@@ -33,28 +33,44 @@ export default function AutocompleteList({
   onSelect,
 }: Props) {
   return (
-    <div className="bg-white rounded-lg shadow-lg border overflow-hidden min-w-[200px]">
+    <div className="bg-white rounded-lg shadow-lg border overflow-hidden min-w-[200px] max-h-[300px] overflow-y-auto">
       {suggestions.map((suggestion, index) => {
         const isSelected = index === selectedIndex;
         const typeStyles = getTypeStyles(suggestion.type, isSelected);
+
+        const prefix =
+          suggestion.type === "person"
+            ? "@"
+            : suggestion.type === "tag"
+            ? "#"
+            : "✨";
 
         return (
           <div
             key={suggestion.id}
             className={`
-              px-3 py-2 cursor-pointer flex items-center gap-2
+              px-3 py-2 cursor-pointer
               transition-colors duration-100 ${typeStyles}
             `}
+            ref={
+              isSelected
+                ? (el) => {
+                    if (el) {
+                      el.scrollIntoView({ block: "nearest" });
+                    }
+                  }
+                : undefined
+            }
             onMouseDown={(e) => {
               e.preventDefault();
               onSelect(suggestion);
             }}
           >
-            {suggestion.icon && (
-              <span className="text-lg">{suggestion.icon}</span>
-            )}
             <div>
-              <div className="font-medium">@{suggestion.label}</div>
+              <div className="font-medium">
+                {prefix}
+                {suggestion.label}
+              </div>
               {suggestion.description && (
                 <div className="text-xs text-gray-500">
                   {suggestion.description}

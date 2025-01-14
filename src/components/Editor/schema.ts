@@ -10,7 +10,7 @@ export const schema = new Schema({
       content: "inline*",
       parseDOM: [{ tag: "p" }],
       toDOM() {
-        return ["p", { class: "my-1 px-0.5" }, 0];
+        return ["p", 0];
       },
     },
     text: {
