@@ -40,20 +40,7 @@ function App() {
             </div>
           </div>
           <div className="mt-5 h-[calc(100%-6rem)]">
-            <Editor
-              defaultContent={[
-                "Welcome to Ideaflow! 🌟",
-                "",
-                "Try mentioning someone by typing <> to see the magic happen.",
-                "",
-                "Some ideas to get you started:",
-                "• Create a list of team members",
-                "• Add AI commands for quick actions",
-                "• Organize with tags",
-                "",
-                "Happy writing! ✍️",
-              ].join("\n")}
-            />
+            <Editor defaultContent="Welcome to Ideaflow!" />
           </div>
         </div>
 

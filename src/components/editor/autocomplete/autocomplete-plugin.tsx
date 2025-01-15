@@ -1,4 +1,4 @@
-import { Plugin, PluginKey, TextSelection } from "prosemirror-state";
+import { Plugin, PluginKey } from "prosemirror-state";
 import { schema } from "../schema";
 import {
   AutocompleteState,
@@ -32,47 +32,29 @@ const insertMention = (
   if (state.position === null) return;
   const insertPos = state.position - 2;
 
-  // Ensure we're within valid bounds
-  if (insertPos < 0 || insertPos > tr.doc.content.size) return;
-
   // Delete the trigger and query
   tr.delete(insertPos, state.position + state.query.length);
 
-  // For AI commands, let the editor handle it
+  // For AI commands, handle separately
   if (suggestion.type === "ai") {
     tr.setMeta("aiCommand", { suggestion, position: insertPos });
     view.dispatch(tr);
     return;
   }
 
-  // Choose prefix based on type
-  const prefix =
-    suggestion.type === "person" ? "@" : suggestion.type === "tag" ? "#" : "✨";
-
-  // Insert the mention text with the appropriate prefix
-  const mentionText = `${prefix}${suggestion.label}`;
-
-  // Add text with a custom mark for styling
-  const mark = schema.marks.mention.create({
+  // Create mention node
+  const mentionNode = schema.nodes.mention.create({
     class: `${getTypeColor(
       suggestion.type
     )} px-1.5 py-0.5 rounded font-medium transition-colors`,
     type: suggestion.type,
     description: suggestion.description,
+    label: suggestion.label,
   });
 
-  // Insert text and mark
-  tr.insertText(mentionText, insertPos);
-  tr.addMark(insertPos, insertPos + mentionText.length, mark);
-
-  // Add a space after the mention
-  tr.insertText(" ", insertPos + mentionText.length);
-
-  // Set selection after the space
-  const newPos = insertPos + mentionText.length + 1;
-  if (newPos <= tr.doc.content.size) {
-    tr.setSelection(TextSelection.create(tr.doc, newPos));
-  }
+  // Insert the node
+  tr.insert(insertPos, mentionNode);
+  tr.insertText(" ", insertPos + 1);
 
   tr.setMeta(autocompleteKey, {
     active: false,
@@ -133,100 +115,10 @@ export const autocompletePlugin = new Plugin({
   props: {
     handleKeyDown(view, event) {
       const state = autocompleteKey.getState(view.state);
+
+      // Only handle Enter/Tab if autocomplete is active
       if (!state.active) {
-        // Handle backspace for mentions when autocomplete is not active
-        if (event.key === "Backspace") {
-          const { $from } = view.state.selection;
-
-          // Check if there's a mention mark right before the cursor
-          if ($from.pos > 0) {
-            const before = view.state.doc.resolve($from.pos - 1);
-            const mentionBefore = before
-              .marks()
-              .find((m) => m.type === schema.marks.mention);
-
-            if (mentionBefore) {
-              event.preventDefault();
-              const { tr } = view.state;
-              let deleteFrom = $from.pos - 1;
-
-              // Walk backwards to find start of mention
-              while (deleteFrom > 0) {
-                const pos = view.state.doc.resolve(deleteFrom);
-                if (!pos.marks().find((m) => m.type === schema.marks.mention)) {
-                  break;
-                }
-                deleteFrom--;
-              }
-
-              // Delete the entire mention and the space after it
-              tr.delete(deleteFrom, $from.pos);
-              view.dispatch(tr);
-              return true;
-            }
-
-            // Check if we're right after a space that follows a mention
-            const twoCharsBefore = view.state.doc.resolve($from.pos - 2);
-            const mentionTwoCharsBefore = twoCharsBefore
-              .marks()
-              .find((m) => m.type === schema.marks.mention);
-
-            if (mentionTwoCharsBefore) {
-              event.preventDefault();
-              const { tr } = view.state;
-              let deleteFrom = $from.pos - 2;
-
-              // Walk backwards to find start of mention
-              while (deleteFrom > 0) {
-                const pos = view.state.doc.resolve(deleteFrom);
-                if (!pos.marks().find((m) => m.type === schema.marks.mention)) {
-                  break;
-                }
-                deleteFrom--;
-              }
-
-              // Delete the entire mention and the space after it
-              tr.delete(deleteFrom, $from.pos);
-              view.dispatch(tr);
-              return true;
-            }
-          }
-
-          // Fallback for cursor inside mention (shouldn't happen with contenteditable=false)
-          const mentionAtCursor = $from
-            .marks()
-            .find((m) => m.type === schema.marks.mention);
-          if (mentionAtCursor) {
-            event.preventDefault();
-            const { tr } = view.state;
-            let start = $from.pos;
-            let end = start;
-
-            while (end > 0) {
-              const pos = view.state.doc.resolve(end - 1);
-              if (!pos.marks().find((m) => m.type === schema.marks.mention)) {
-                break;
-              }
-              end--;
-            }
-
-            while (start < tr.doc.nodeSize - 2) {
-              const pos = view.state.doc.resolve(start + 1);
-              if (!pos.marks().find((m) => m.type === schema.marks.mention)) {
-                break;
-              }
-              start++;
-            }
-
-            // Delete the entire mention and any trailing space
-            tr.delete(end, start + 1);
-            view.dispatch(tr);
-            return true;
-          }
-
-          return false;
-        }
-        return false;
+        return false; // Let other plugins handle the event
       }
 
       // Get filtered suggestions
@@ -264,9 +156,13 @@ export const autocompletePlugin = new Plugin({
 
         case "Enter":
         case "Tab":
-          if (state.active && state.position !== null) {
+          // Only handle Enter/Tab if we have suggestions
+          if (
+            state.active &&
+            state.position !== null &&
+            filteredSuggestions.length > 0
+          ) {
             event.preventDefault();
-            // Use the filtered suggestions instead of all suggestions
             const suggestion = filteredSuggestions[state.selectedIndex];
             if (suggestion) {
               insertMention(view, state, suggestion);
